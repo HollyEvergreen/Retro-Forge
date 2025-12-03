@@ -2,6 +2,7 @@
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+using OpenTK.Graphics.OpenGL;
 using Number = double;
 
 var settings = new GameWindowSettings()
@@ -21,28 +22,48 @@ var nativeWindowSettings = new NativeWindowSettings()
     BlueBits = 8,
     GreenBits = 8,
     DepthBits = 16,
-    ClientSize = new Vector2i(1920, 1080),
+    ClientSize = new Vector2i(640, 360),
     Flags = ContextFlags.ForwardCompatible,
     Title = "RetroForge",
     SrgbCapable = true,
     Vsync = VSyncMode.Adaptive,
+    Profile = ContextProfile.Core,
 };
 
 
-const Number dt = 0;
-Console.WriteLine(dt);
 var gameWindow = new GameWindow(settings, nativeWindowSettings);
 var renderForge = new RenderForge();
-
 
 Debug.Assert(gameWindow != null, nameof(gameWindow) + " != null");
 Debug.Assert(renderForge != null, nameof(RenderForge) + " != null");
 
-renderForge.RegisterWindow(ref gameWindow);
-
-gameWindow.Load += () => { };
-gameWindow.RenderFrame += renderForge.Render;
-gameWindow.UpdateFrame += renderForge.Update;
 
 
-gameWindow.Close();
+gameWindow.Load += () =>
+{
+    renderForge.RegisterWindow(ref gameWindow);
+    GL.ClearColor(Color4.Aliceblue);
+    gameWindow.RenderFrame += _ => { GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); };
+    gameWindow.RenderFrame += renderForge.Render; 
+    gameWindow.RenderFrame += _ => { gameWindow.SwapBuffers(); };
+    gameWindow.UpdateFrame += renderForge.Update;
+};
+gameWindow.Resize += eventArgs =>
+{
+    GL.Viewport(0, 0, eventArgs.Width, eventArgs.Height);
+};
+gameWindow.Move += eventArgs =>
+{
+    GL.Viewport(eventArgs.X, eventArgs.Y, gameWindow.ClientSize.X, gameWindow.ClientSize.Y);
+};
+gameWindow.Unload += () =>
+{
+    gameWindow.Close();
+    gameWindow.Dispose();
+};
+
+
+Console.WriteLine("Hello World!");
+
+gameWindow.Run();
+Console.WriteLine("Goodbye World!");
