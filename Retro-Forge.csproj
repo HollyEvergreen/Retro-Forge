@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="MessagePack" Version="3.1.4" />
+    <PackageReference Include="MSTest" Version="4.0.2" />
     <PackageReference Include="OpenTK" Version="5.0.0-pre.15" />
     <PackageReference Include="ZLinq" Version="1.5.4" />
   </ItemGroup>
