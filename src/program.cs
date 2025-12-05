@@ -1,9 +1,50 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Graphics.OpenGL;
-using Number = double;
+using RetroForge.NET;
+if (args.Length != 0)
+{
+    if (args[0] == "hello")
+        Console.WriteLine("hi there why u saying hi");
+    if (args[0] == "utils")
+    {
+        DirectoryInfo? dirInfo;
+        switch (args[1])
+        {
+            case "-shader":
+                var shaderCompilationParams = args[2..].ToList();
+                Shader.CompileShaders(shaderCompilationParams);
+                break;
+            case "-checks":
+                dirInfo = new DirectoryInfo("./shaders");
+                Console.WriteLine($"{dirInfo.Exists}");
+                var shaders = dirInfo.EnumerateFiles("*.spv");
+                Console.WriteLine($"Shader Count: {shaders.Count()}");
+                foreach (var shader in shaders)
+                {
+                    Console.WriteLine($"\t{shader.Name}");
+                }
+                break;
+            case "-regen":
+                dirInfo = new DirectoryInfo("./shaders");
+                if (!dirInfo.Exists)
+                {
+                    dirInfo = Directory.CreateDirectory(dirInfo.FullName);
+                }
+
+                dirInfo = new DirectoryInfo($"C://Users/{Environment.UserName}/AppData/RetroForge/Plugins");
+                if (!dirInfo.Exists)
+                {
+                    dirInfo.Create();
+                }
+                Console.WriteLine($"{dirInfo.Exists}");
+                break;
+        }
+        return;
+    }
+}
 
 var settings = new GameWindowSettings()
 {
@@ -41,10 +82,14 @@ Debug.Assert(renderForge != null, nameof(RenderForge) + " != null");
 
 gameWindow.Load += () =>
 {
+    var pluginFolder = new DirectoryInfo($"C://Users/{Environment.UserName}/AppData/RetroForge/Plugins");
+    renderForge.LoadPlugins(pluginFolder);
+    renderForge.LoadPluginAt(new(@"D:\RetroForge.Examples\UI-Test\bin\Debug\net10.0\UI-Test.dll"));
+    renderForge.LogPlugins();
     renderForge.RegisterWindow(ref gameWindow);
     GL.ClearColor(Color4.Aliceblue);
     gameWindow.RenderFrame += _ => { GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); };
-    gameWindow.RenderFrame += renderForge.Render; 
+    gameWindow.RenderFrame += renderForge.Render;
     gameWindow.RenderFrame += _ => { gameWindow.SwapBuffers(); };
     gameWindow.UpdateFrame += renderForge.Update;
 };
