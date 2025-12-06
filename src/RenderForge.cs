@@ -1,25 +1,24 @@
-using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.Loader;
 using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using OpenTK.Graphics.OpenGL;
 using RetroForge.NET;
+using Window = RetroForge.NET.Window;
+
 
 public class RenderForge
 {
-    private GameWindow gameWindow;
-    private VertexBuffer vertexBuffer;
+    private Window? gameWindow = null;
+    private VertexBuffer? vertexBuffer = null;
     private List<IRetroForgePlugin> plugins = [];
 
-    public void RegisterWindow(ref GameWindow gameWindow)
+    public void RegisterWindow(ref Window gameWindow)
     {
         this.gameWindow = gameWindow;
         RegisterKeyDownEvent((args =>
         {
-            if (args is { Key: Keys.Escape, Alt: true })
+            if (args.Key == Keys.Escape)
             {
+                Logger.Log("Closing");
                 this.gameWindow.Close();
             }
         }));
@@ -27,6 +26,9 @@ public class RenderForge
 
         // TODO: Create Base Shader and Register verts
 
+        //Shader BaseVert = new(@"D:\RetroForge\Retro-Forge\shaders\base-vert.spv");
+        //Shader BaseFrag = new(@"D:\RetroForge\Retro-Forge\shaders\base-frag.spv");
+        //Logger.Log(ConsoleColor.Red, $"{BaseVert.id}\n{BaseFrag.id}");
 
     }
 
@@ -34,7 +36,6 @@ public class RenderForge
     {
 
     }
-
     public void Update(FrameEventArgs frameEventArgs)
     {
 
@@ -42,22 +43,22 @@ public class RenderForge
 
     void RegisterVertexBuffer(float[] _vertexBuffer)
     {
-        vertexBuffer.AddVerts(_vertexBuffer);
+        vertexBuffer?.AddVerts(_vertexBuffer);
     }
 
     public void RegisterKeyEvent(Action<KeyboardKeyEventArgs> KeyDown, Action<KeyboardKeyEventArgs> KeyUp)
     {
-        Debug.Assert(gameWindow is not null);
-        gameWindow.KeyDown += KeyDown;
-        gameWindow.KeyUp += KeyUp;
+        Logger.Assert(() => { return gameWindow is not null; });
+        gameWindow?.KeyDown += KeyDown;
+        gameWindow?.KeyUp += KeyUp;
     }
     public void RegisterKeyDownEvent(Action<KeyboardKeyEventArgs> KeyDown)
     {
-        gameWindow.KeyDown += KeyDown;
+        gameWindow?.KeyDown += KeyDown;
     }
     public void RegisterKeyUpEvent(Action<KeyboardKeyEventArgs> KeyUp)
     {
-        gameWindow.KeyUp += KeyUp;
+        gameWindow?.KeyUp += KeyUp;
     }
 
     public void LoadPlugins(DirectoryInfo pluginPath)
@@ -81,12 +82,12 @@ public class RenderForge
 
     public void LogPlugins()
     {
-        Console.WriteLine($"{plugins.Count} plugins loaded.");
+        Logger.Log($"{plugins.Count} plugins loaded.");
         if (plugins.Count == 0)
             return;
         foreach (var plugin in plugins)
         {
-            plugin.ToString();
+            Logger.Log(plugin.View());
         }
     }
 

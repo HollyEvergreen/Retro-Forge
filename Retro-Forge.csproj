@@ -10,11 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="exampleGame\**" />
+    <EmbeddedResource Remove="exampleGame\**" />
+    <None Remove="exampleGame\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MessagePack" Version="3.1.4" />
-    <PackageReference Include="MSTest" Version="4.0.2" />
     <PackageReference Include="OpenTK" Version="5.0.0-pre.15" />
     <PackageReference Include="shaderc.net" Version="0.1.0" />
-    <PackageReference Include="ZLinq" Version="1.5.4" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="exampleGame\exampleGame.csproj" />
+    <Folder Include="shaders\" />
   </ItemGroup>
 
 </Project>
