@@ -5,11 +5,11 @@ using RetroForge.NET;
 using Window = RetroForge.NET.Window;
 
 
-public class RenderForge
+public class RetroForgeEngine
 {
     private Window? gameWindow = null;
     private VertexBuffer? vertexBuffer = null;
-    private List<IRetroForgePlugin> plugins = [];
+    public List<Type> plugins = [];
 
     public void RegisterWindow(ref Window gameWindow)
     {
@@ -23,6 +23,7 @@ public class RenderForge
             }
         }));
         vertexBuffer = new VertexBuffer();
+
 
         // TODO: Create Base Shader and Register verts
 
@@ -75,7 +76,7 @@ public class RenderForge
             plugins.AddRange(
                 from type in types
                 where type.IsAssignableTo(typeof(IRetroForgePlugin))
-                select (IRetroForgePlugin)Activator.CreateInstance(type)!
+                select type
                 );
         }
     }
@@ -87,7 +88,7 @@ public class RenderForge
             return;
         foreach (var plugin in plugins)
         {
-            Logger.Log(plugin.View());
+            Logger.Log(plugin.Name);
         }
     }
 
@@ -101,7 +102,7 @@ public class RenderForge
         plugins.AddRange(
             from type in types
             where type.IsAssignableTo(typeof(IRetroForgePlugin))
-            select (IRetroForgePlugin)Activator.CreateInstance(type)!
+            select type!
             );
 
     }

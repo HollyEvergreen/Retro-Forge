@@ -81,24 +81,27 @@ internal class Program
 
 
 		var gameWindow = new Window(settings, nativeWindowSettings);
-		var renderForge = new RenderForge();
+		var renderForge = new RetroForgeEngine();
 
 		Debug.Assert(gameWindow != null, nameof(gameWindow) + " != null");
-		Debug.Assert(renderForge != null, nameof(RenderForge) + " != null");
+		Debug.Assert(renderForge != null, nameof(RetroForgeEngine) + " != null");
 		Logger.Log($"Dev mode -> {DEV_MODE}");
 
-
-		gameWindow.Load += () =>
+        var plugin_type = renderForge.plugins[1];
+        string[] _args = ["10000"];
+        IRetroForgePlugin plugin = (plugin_type.GetConstructor([typeof(Window), typeof(string[])])?.Invoke([gameWindow, _args])) as IRetroForgePlugin ?? throw new Exception();
+        gameWindow.Load += () =>
 		{
 			var pluginFolder = new DirectoryInfo($"C://Users/{Environment.UserName}/AppData/Roaming/RetroForge/Plugins");
 			renderForge.LoadPlugins(pluginFolder);
-			renderForge.LogPlugins();
 			renderForge.RegisterWindow(ref gameWindow);
 			GL.ClearColor(Color4.Aliceblue);
-			gameWindow.RenderFrame += _ => { GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); };
-			gameWindow.RenderFrame += renderForge.Render;
-			gameWindow.RenderFrame += _ => { gameWindow.SwapBuffers(); };
-			gameWindow.UpdateFrame += renderForge.Update;
+			gameWindow.RenderFrame += plugin.Render;
+			gameWindow.UpdateFrame += plugin.Update;
+			//gameWindow.RenderFrame += _ => { GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); };
+			//gameWindow.RenderFrame += renderForge.Render;
+			//gameWindow.RenderFrame += _ => { gameWindow.SwapBuffers(); };
+			//gameWindow.UpdateFrame += renderForge.Update;
 		};
 		gameWindow.Resize += eventArgs =>
 		{
@@ -108,7 +111,8 @@ internal class Program
 		{
 			GL.Viewport(eventArgs.X, eventArgs.Y, gameWindow.ClientSize.X, gameWindow.ClientSize.Y);
 		};
-		gameWindow.Run();
+
+		//gameWindow.Run();
 		gameWindow.Dispose();
 		Logger.ResetConsole();
 	}
