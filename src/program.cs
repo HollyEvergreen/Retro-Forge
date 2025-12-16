@@ -4,11 +4,10 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Graphics.OpenGL;
 using System.Diagnostics;
 using RetroForge.NET;
-using System.Runtime.CompilerServices;
 
-internal class Program
+public class Program
 {
-	static bool DEV_MODE;
+	private static bool DEV_MODE;
 	private static void Main(string[] args)
 	{
 		DEV_MODE = args.ToList().Contains("dev");
@@ -21,28 +20,27 @@ internal class Program
 				DirectoryInfo? dirInfo;
 				switch (args[1])
 				{
-					case "-shader":
-						var shaderCompilationParams = args[2..].ToList();
-						Shader.CompileShaders(shaderCompilationParams);
-						break;
-					case "-checks":
-						dirInfo = new DirectoryInfo("./shaders");
-						Console.WriteLine($"{dirInfo.Exists}");
-						var shaders = dirInfo.EnumerateFiles("*.spv");
-						Console.WriteLine($"Shader Count: {shaders.Count()}");
-						foreach (var shader in shaders)
-						{
-							Console.WriteLine($"\t{shader.Name}");
-						}
-						break;
-					case "-regen":
-						dirInfo = new DirectoryInfo("./shaders");
+                    case "-checks":
+                        Logger.Log(Engine.AppData("shaders"));
+                        dirInfo = new DirectoryInfo(Engine.AppData("shaders"));
+                        Console.WriteLine($"{dirInfo.Exists}");
+                        if (!dirInfo.Exists)
+                            break;
+                        var shaders = dirInfo.EnumerateFiles("*.spv");
+                        Console.WriteLine($"Shader Count: {shaders.Count()}");
+                        foreach (var shader in shaders)
+                        {
+                            Console.WriteLine($"\t{shader.Name}");
+                        }
+                        break;
+                    case "-regen":
+						dirInfo = new DirectoryInfo(Engine.AppData("shaders"));
 						if (!dirInfo.Exists)
 						{
 							dirInfo = Directory.CreateDirectory(dirInfo.FullName);
 						}
 
-						dirInfo = new DirectoryInfo($"C://Users/{Environment.UserName}/AppData/RetroForge/Plugins");
+						dirInfo = new DirectoryInfo($"C://Users/{Environment.UserName}/AppData/RetroForgeEngine/Plugins");
 						if (!dirInfo.Exists)
 						{
 							dirInfo.Create();
@@ -56,8 +54,8 @@ internal class Program
 
 		var settings = new GameWindowSettings()
 		{
-			UpdateFrequency = 144,
-			Win32SuspendTimerOnDrag = false
+			UpdateFrequency = 144000,
+			Win32SuspendTimerOnDrag = false,
 		};
 		var nativeWindowSettings = new NativeWindowSettings()
 		{
@@ -73,7 +71,7 @@ internal class Program
 			DepthBits = 16,
 			ClientSize = new Vector2i(640, 360),
 			Flags = ContextFlags.ForwardCompatible,
-			Title = "RetroForge",
+			Title = "RetroForgeEngine",
 			SrgbCapable = true,
 			Vsync = VSyncMode.Adaptive,
 			Profile = ContextProfile.Core,
@@ -81,32 +79,29 @@ internal class Program
 
 
 		var gameWindow = new Window(settings, nativeWindowSettings);
-		var renderForge = new RenderForge();
-
 		Debug.Assert(gameWindow != null, nameof(gameWindow) + " != null");
-		Debug.Assert(renderForge != null, nameof(RenderForge) + " != null");
 		Logger.Log($"Dev mode -> {DEV_MODE}");
 
 
 		gameWindow.Load += () =>
 		{
-			var pluginFolder = new DirectoryInfo($"C://Users/{Environment.UserName}/AppData/Roaming/RetroForge/Plugins");
-			renderForge.LoadPlugins(pluginFolder);
-			renderForge.LogPlugins();
-			renderForge.RegisterWindow(ref gameWindow);
+            var RetroForgeEngine = new Engine(ref gameWindow);
+            Debug.Assert(RetroForgeEngine != null, nameof(Engine) + " != null");
 			GL.ClearColor(Color4.Aliceblue);
-			gameWindow.RenderFrame += _ => { GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); };
-			gameWindow.RenderFrame += renderForge.Render;
-			gameWindow.RenderFrame += _ => { gameWindow.SwapBuffers(); };
-			gameWindow.UpdateFrame += renderForge.Update;
+			DirectoryInfo pluginFolder = new(Engine.AppData("plugins"));
+			Logger.Log("Load Plugins");
+			RetroForgeEngine.LoadPlugins(pluginFolder);
+			RetroForgeEngine.LogPlugins();
+			Logger.Log("Set Plugin");
+			RetroForgeEngine.SetPlugin(0);
+			Logger.Log("Load Plugin");
+			RetroForgeEngine.OnLoad();
+            gameWindow.RenderFrame += RetroForgeEngine.Render;
+			gameWindow.UpdateFrame += RetroForgeEngine.Update;
 		};
 		gameWindow.Resize += eventArgs =>
 		{
 			GL.Viewport(0, 0, eventArgs.Width, eventArgs.Height);
-		};
-		gameWindow.Move += eventArgs =>
-		{
-			GL.Viewport(eventArgs.X, eventArgs.Y, gameWindow.ClientSize.X, gameWindow.ClientSize.Y);
 		};
 		gameWindow.Run();
 		gameWindow.Dispose();
