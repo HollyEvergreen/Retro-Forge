@@ -3,6 +3,15 @@
     "Retro-Forge": {
       "commandName": "Project",
       "hotReloadEnabled": false
+    },
+    "Build And Run": {
+      "commandName": "Executable",
+      "executablePath": "D:\\RetroForge\\Retro-Forge\\start.exe"
+    },
+    "Run": {
+      "commandName": "Executable",
+      "executablePath": "D:\\RetroForge\\Retro-Forge\\start.exe",
+      "commandLineArgs": "-"
     }
   }
 }
